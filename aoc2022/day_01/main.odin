@@ -1,12 +1,12 @@
 package main
 import "core:fmt"
-import "core:os"
 import "core:strings"
 import "core:strconv"
 import "core:slice"
+import h "../helpers"
 
 main :: proc() {
-	data := read_file("input.txt")
+	data := h.read_file("input.txt")
 	defer delete(data)
 
 	lines := strings.split_lines(string(data))
@@ -32,12 +32,3 @@ main :: proc() {
 
 }
 
-read_file :: proc(filepath: string, allocator := context.allocator) -> []byte {
-	context.allocator = allocator
-	data, ok := os.read_entire_file(filepath)
-	if !ok {
-		panic("could not read file")
-	}
-
-	return data
-}
