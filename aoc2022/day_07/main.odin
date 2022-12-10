@@ -54,8 +54,11 @@ part1 :: proc(data: []string) {
 		}
 	}
 
-	print_dir(&root)
+	//print_dir(&root)
 
+	total_part1: int = 0
+	collect_sizes(&root, 100_000, &total_part1)
+	fmt.println("Part 1: ", total_part1)
 }
 
 
@@ -107,14 +110,16 @@ print_dir :: proc(dir: ^Directory, indent := 0) {
 		print_spaces(4 * indent)
 		fmt.println(dir.name)
 	}
+
+	for f in dir.files {
+		print_spaces(4 * indent)
+		fmt.println(" - ", f.name, f.size)
+	}
+
 	for s, i in dir.subdirs {
 		print_spaces(4 * indent)
 		fmt.println(" - ", s.name)
 		print_dir(&dir.subdirs[i], indent + 1)
-	}
-	for f in dir.files {
-		print_spaces(4 * 2 * indent)
-		fmt.println(" - ", f.name, f.size)
 	}
 }
 
@@ -122,4 +127,20 @@ print_spaces :: proc(n: int) {
 	for i in 0 ..< n {
 		fmt.print(" ")
 	}
+}
+
+collect_sizes :: proc(d: ^Directory, target: int, total: ^int) -> int {
+	sum := 0
+	for f in d.files {
+		sum += f.size
+	}
+	for s, i in d.subdirs {
+		sum += collect_sizes(&d.subdirs[i], target, total)
+	}
+	if sum <= target {
+		total^ += sum
+		// fmt.println("size ", d.name, " is ", sum)
+	}
+
+	return sum
 }
