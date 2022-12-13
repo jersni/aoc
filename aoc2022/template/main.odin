@@ -5,11 +5,17 @@ import "core:strconv"
 import "core:container/small_array"
 import h "../helpers"
 
-MAX_STACK_SIZE :: 100
+SAMPLE :: false
+when SAMPLE {
+	file := "sample_input.txt"
+
+}
+when !SAMPLE {
+	file := "input.txt"
+
+}
 
 main :: proc() {
-	when 1 == 2 do file := "sample_input.txt"
-	when 1 == 1 do file := "input.txt"
 	data := h.read_file(file)
 	defer delete(data)
 
