@@ -2,7 +2,7 @@
     "collections": [
         {
             "name": "core",
-            "path": "c:\\Users\\jms\\projects\\github.com\\odin-lang\\Odin\\core"
+            "path": "C:\\Users\\jms\\bin\\odin\\core"
         }
     ],
     "enable_document_symbols": true,

@@ -5,7 +5,7 @@ import "core:strings"
 import "core:strconv"
 import h "../helpers"
 
-SAMPLE :: true
+SAMPLE :: false
 when SAMPLE {
 	file := "sample_input.txt"
 }
@@ -20,8 +20,11 @@ main :: proc() {
 	lines := strings.split_lines(string(data))
 	defer delete(lines)
 
-	part1(lines)
+	part1 := solve(lines, 2)
+	part2 := solve(lines, 10)
 
+	fmt.println("Part 1: ", part1)
+	fmt.println("Part 2: ", part2)
 }
 
 
@@ -34,40 +37,62 @@ Dir :: enum {
 	d,
 	l,
 }
-part1 :: proc(lines: []string) {
+
+
+solve :: proc(lines: []string, $RopeLenght: int) -> int {
 	s := Pos{0, 0}
-	h := s
-	h_last := s
-	t := s
+	rope := [RopeLenght]Pos{}
+	rope = s
+
 	visited := make(map[Pos]bool)
-	visited[t] = true
+	visited[s] = true
 
 	for l in lines {
 		dir, reps := parse_dir_and_reps(l)
 		for i in 0 ..< reps {
-			h_last = h
 			switch dir {
 			case Dir.u:
-				h.y += 1
+				rope[0].y += 1
 			case Dir.r:
-				h.x += 1
+				rope[0].x += 1
 			case Dir.d:
-				h.y -= 1
+				rope[0].y -= 1
 			case Dir.l:
-				h.x -= 1
+				rope[0].x -= 1
 			}
 
-			if math.abs(h.x - t.x) > 1 || math.abs(h.y - t.y) > 1 {
-				t.x = h_last.x
-				t.y = h_last.y
-				visited[t] = true
+			for j := 1; j < len(rope); j += 1 {
+				diff_x := math.abs(rope[j - 1].x - rope[j].x)
+				diff_y := math.abs(rope[j - 1].y - rope[j].y)
+
+				if diff_x > 1 || diff_y > 1 {
+					dx, dy := 0, 0
+					if rope[j - 1].x - rope[j].x > 0 {
+						dx = 1
+					} else if rope[j - 1].x - rope[j].x < 0 {
+						dx = -1
+					}
+
+					if rope[j - 1].y - rope[j].y > 0 {
+						dy = 1
+					} else if rope[j - 1].y - rope[j].y < 0 {
+						dy = -1
+					}
+
+
+					rope[j].x += dx
+					rope[j].y += dy
+					if j == len(rope) - 1 {
+						visited[rope[j]] = true
+					}
+				}
 			}
 		}
 	}
 
-
-	fmt.println("Part 1: ", len(visited))
+	return len(visited)
 }
+
 
 parse_dir_and_reps :: proc(data: string) -> (dir: Dir, reps: int) {
 	parts := strings.split(data, " ")
