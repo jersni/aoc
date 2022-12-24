@@ -6,7 +6,7 @@ import "core:container/small_array"
 import h "../helpers"
 import "core:slice"
 
-SAMPLE :: true
+SAMPLE :: false
 when SAMPLE {
 	file := "sample_input.txt"
 
@@ -25,6 +25,15 @@ main :: proc() {
 
 	part1(lines)
 
+    /*
+RJERPEFC
+###....##.####.###..###..####.####..##..
+#..#....#.#....#..#.#..#.#....#....#..#.
+#..#....#.###..#..#.#..#.###..###..#....
+###.....#.#....###..###..#....#....#....
+#.#..#..#.#....#.#..#....#....#....#..#.
+#..#..##..####.#..#.#....####.#.....##..
+    */
 }
 
 State :: struct {
@@ -34,7 +43,7 @@ State :: struct {
 
 part1 :: proc(lines: []string) {
 	cycles := make([dynamic]State)
-    defer delete(cycles)
+	defer delete(cycles)
 	cycle := 0
 	x := 1
 	for instruction in lines {
@@ -61,33 +70,16 @@ part1 :: proc(lines: []string) {
 		fmt.println(s, ss, signal_strength)
 	}
 	fmt.println("Part 1: ", signal_strength)
-	// addx V takes two cycles. after 2, update x by V
-	// noop takes one cycle
+
+	for row := 0; row < 6; row += 1 {
+		for pos := 0; pos < 40; pos += 1 {
+			s := cycles[40 * row + pos]
+			if pos == s.x || pos - 1 == s.x || pos + 1 == s.x {
+				fmt.print("#")
+			} else {
+				fmt.print(".")
+			}
+		}
+		fmt.println()
+	}
 }
-
-/*
-noop
-addx 3
-addx -5
-
-Execution of this program proceeds as follows:
-
-    At the start of the first cycle, the noop instruction begins execution. During the first cycle, X is 1. After the
-    first cycle, the noop instruction finishes execution, doing nothing.
-   
-    At the start of the second cycle, the addx 3 instruction begins execution. During the second cycle, X is still 1.
-    During the third cycle, X is still 1. After the third cycle, the addx 3 instruction finishes execution, setting
-    X to 4.
-   
-    At the start of the fourth cycle, the addx -5 instruction begins execution. During the fourth cycle, X is still 4.
-   
-    During the fifth cycle, X is still 4. After the fifth cycle, the addx -5 instruction finishes execution, setting 
-    X to -1.
-
-Signal strenght = X * cycle
-
-The sum of these signal strengths for the example data is 13140.
-
-Find the signal strength during the 20th, 60th, 100th, 140th, 180th, and 220th cycles. What is the sum of these six 
-signal strengths?
-*/
