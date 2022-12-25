@@ -5,7 +5,7 @@ import "core:strconv"
 import "core:slice"
 import h "../helpers"
 
-SAMPLE :: true
+SAMPLE :: false
 when SAMPLE {
 	file := "sample_input.txt"
 
@@ -14,7 +14,6 @@ when !SAMPLE {
 	file := "input.txt"
 
 }
-ROUNDS :: 20
 main :: proc() {
 	data := h.read_file(file)
 	defer delete(data)
@@ -23,12 +22,78 @@ main :: proc() {
 	defer delete(lines)
 
 	part1(lines)
-
+    part2(lines)
 }
 
 part1 :: proc(lines: []string) {
 	monkeys: [10]Monkey
 	init_monkeys(lines, monkeys[:])
+	dead_idx: int
+    modulus := 1
+	for m, i in monkeys {
+		if !m.alive {
+			dead_idx = i
+			break
+		}
+        modulus *= m.divisible_by
+	}
+	result := sim(monkeys[:dead_idx], 3, modulus, 20)
+    fmt.println("Part 1:", result)
+}
+part2 :: proc(lines: []string) {
+	monkeys: [10]Monkey
+	init_monkeys(lines, monkeys[:])
+	dead_idx: int
+    modulus := 1
+	for m, i in monkeys {
+		if !m.alive {
+			dead_idx = i
+			break
+		}
+        modulus *= m.divisible_by
+	}
+    result := sim(monkeys[:dead_idx], 1, modulus, 10000)
+    fmt.println("Part 2:", result)
+}
+
+sim :: proc(monkeys: []Monkey, relief: int, modulus: int, rounds: int) -> int {
+	for round := 0; round < rounds; round += 1 {
+		for m, i in monkeys {
+			if len(m.items) > 0 {
+				for item in m.items {
+					monkeys[i].inspections += 1
+					wl := item
+					switch m.op {
+					case Operation.mult_n:
+						wl = wl * m.n
+					case Operation.mult_old:
+						wl = wl * wl
+					case Operation.add_n:
+						wl = wl + m.n
+					case Operation.add_old:
+						wl = wl + wl
+					}
+					wl = wl / relief
+                    new_item := wl % modulus
+					if wl % m.divisible_by == 0 {
+						append(&monkeys[m.true_target].items, new_item)
+					} else {
+
+						append(&monkeys[m.false_target].items, new_item)
+					}
+				}
+				clear(&monkeys[i].items)
+			}
+		}
+	}
+
+	slice.sort_by(monkeys[:], compare_by_inspections)
+	for m in monkeys {
+		fmt.println(m.id, m.inspections)
+	}
+	return monkeys[0].inspections * monkeys[1].inspections
+
+
 }
 
 Operation :: enum {
@@ -49,7 +114,6 @@ Monkey :: struct {
 	false_target: int,
 	inspections:  int,
 }
-
 
 init_monkeys :: proc(data: []string, monkeys: []Monkey) {
 	monkey: int
@@ -73,48 +137,10 @@ init_monkeys :: proc(data: []string, monkeys: []Monkey) {
 			monkeys[monkey].false_target = read_target(line, i, "If false: throw to monkey ")
 		}
 	}
-	for round := 0; round < ROUNDS; round += 1 {
-		for m, i in monkeys {
-			if !m.alive do continue
-			if len(m.items) > 0 {
-				for item in m.items {
-					monkeys[i].inspections += 1
-					wl := item
-					switch m.op {
-					case Operation.mult_n:
-						wl = wl * m.n
-					case Operation.mult_old:
-						wl = wl * wl
-					case Operation.add_n:
-						wl = wl + m.n
-					case Operation.add_old:
-						wl = wl + wl
-					}
-					wl = wl / 3
-					if wl % m.divisible_by == 0 {
-						append(&monkeys[m.true_target].items, wl)
-					} else {
-
-						append(&monkeys[m.false_target].items, wl)
-					}
-
-				}
-				clear(&monkeys[i].items)
-			}
-		}
-	}
-
-	slice.sort_by(monkeys[:], compare_by_inspections)
-    for m in monkeys {
-        if !m.alive do continue
-        fmt.println(m.id, m.inspections)
-    }
-    fmt.println("Part 1: ", monkeys[0].inspections * monkeys[1].inspections)
-
 }
 
 compare_by_inspections :: proc(a, b: Monkey) -> bool {
-    return a.inspections > b.inspections
+	return a.inspections > b.inspections
 }
 
 read_id :: proc(line: string) -> int {
@@ -130,7 +156,6 @@ read_items :: proc(line: string, items: ^[dynamic]int) {
 		append(items, strconv.atoi(i))
 	}
 }
-
 
 read_operation :: proc(line: string) -> (op: Operation, n: int) {
 	if strings.index(line, "+") >= 0 {
